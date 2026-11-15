@@ -1,16 +1,24 @@
 ---
 name: Build container image
+# Changes that only touch documentation or the Windows helper scripts don't
+# rebuild the OS, so installed computers don't download an identical update.
 on:
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'tools/**'
   schedule:
     - cron: '05 10 * * *'  # 10:05am UTC everyday
   push:
     branches:
       - main
     paths-ignore:
-      - '**/README.md'
+      - '**.md'
+      - 'docs/**'
+      - 'tools/**'
   workflow_dispatch:
 
 env:

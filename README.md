@@ -28,10 +28,16 @@ The image is also rebuilt every day, so Fedora's security fixes arrive automatic
 
 ## Roadmap
 
-1. **Foundation** (now): automatic builds, installer, over-the-air updates, basic Mac-style layout
-2. **Phone integration**: pair at setup, a Phone menu in the top bar, mirroring, file and photo sharing
-3. **Full Mac-inspired design**: dock, menu bar, icons, startup screen
-4. **Companion phone app and polish**
+The full plan is in [ROADMAP.md](ROADMAP.md). It covers a feature-by-feature comparison with macOS, the native phone integration design, Time Machine-style backups, the Chaulagain Store, and the build phases:
+
+0. **Foundation** (now): automatic builds, installer, over-the-air updates, basic Mac-style layout
+1. **Install-time decisions**: snapshot-ready disk format, encryption, default apps
+2. **Backups**: hourly snapshots and scheduled backups to a USB drive or NAS
+3. **Phone integration**, built into the OS: menu bar, file manager, Share menu, notifications, mirroring
+4. **Mac-inspired design**
+5. **Chaulagain Store** for optional apps
+6. **Extras**: our own Pixel app, Auto Unlock, AI assistant
+7. **Production install**
 
 ## What's where
 

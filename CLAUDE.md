@@ -35,7 +35,9 @@
 - `scrcpy` isn't in the Fedora repos, so it needs another source (a COPR or an upstream build) in the phone phase.
 
 ## Roadmap
-1. Foundation: builds, signing, ISO, OTA verified in the VM
-2. Phone: pairing at first boot (QR code), a Phone menu in the top bar (battery, photos, messages, mirror, send file, ring), Send to Pixel in Share menus
-3. Full Mac-inspired design: theme (start from WhiteSur, then customise), Inter font, dock polish, startup screen, wallpapers, logo
-4. A companion Android app (a KDE Connect fork, branded) and polish
+`ROADMAP.md` is the source of truth: the macOS comparison, designs, build phases (0–7) and open questions. Read it before planning work, tick its checkboxes as phases land, and update it when a decision changes.
+
+Key product decisions recorded there:
+- **Phone integration is native.** It ships inside the OS image (menu bar panel, file manager, Share menu, notifications, camera picker, Settings page), never as a store app. The phone side needs one background app (KDE Connect, later our own).
+- **Backups:** the system needs none (the recipe plus rollback). User files get hourly Btrfs snapshots and scheduled Borg backups (Pika Backup first). This needs the installer to use Btrfs, so decide it before the first real install.
+- **Chaulagain Store:** our own Flatpak repository shown in Discover, for optional apps only.
