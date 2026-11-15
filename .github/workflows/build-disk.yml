@@ -12,16 +12,13 @@ on:
       platform:
         required: true
         type: choice
+        default: amd64
         options:
           - amd64
           - arm64
-  pull_request:
-    branches:
-      - main
-    paths:
-      - './disk_config/disk.toml'
-      - './disk_config/iso.toml'
-      - './.github/workflows/build-disk.yml'
+  # The installer is only needed for new installs, so it is built on demand
+  # (Actions tab -> Build disk images -> Run workflow). Installed systems
+  # update over the air and never need a new installer.
 
 env:
   IMAGE_NAME: ${{ github.event.repository.name }} # output of build.yml, keep in sync
@@ -40,7 +37,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        disk-type: ["qcow2", "anaconda-iso"]
+        disk-type: ["anaconda-iso"]
     permissions:
       contents: read
       packages: read

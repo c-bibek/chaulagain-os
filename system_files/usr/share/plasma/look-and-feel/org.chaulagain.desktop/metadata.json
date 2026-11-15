@@ -1,0 +1,17 @@
+{
+    "KPackageStructure": "Plasma/LookAndFeel",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Chaulagain OS"
+            }
+        ],
+        "Description": "Menu bar on top, dock at the bottom",
+        "Id": "org.chaulagain.desktop",
+        "License": "GPL-2.0-or-later",
+        "Name": "Chaulagain OS",
+        "Version": "1.0",
+        "Website": "https://github.com/c-bibek/chaulagain-os"
+    },
+    "X-Plasma-APIVersion": "2"
+}

@@ -1,27 +1,67 @@
 #!/bin/bash
+# Chaulagain OS image build script.
+# Runs once inside the image during every build on GitHub.
 
 set -ouex pipefail
 
-# Copy the contents of system_files/ of the git repo to /
-cp -avf "/ctx/system_files"/. /
+FEDORA_VERSION="$(rpm -E %fedora)"
 
-### Install packages
+### 1. Our files: desktop layout, settings, signing key
+cp -avf /ctx/system_files/. /
 
-# Packages can be installed from any enabled yum repo on the image.
-# RPMfusion repos are available by default in ublue main images
-# List of rpmfusion packages can be found here:
-# https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/43/x86_64/repoview/index.html&protocol=https&redirect=1
+### 2. Packages
+# kde-connect      phone link: files, photos, notifications, clipboard, texts
+# android-tools    adb, used for phone screen mirroring
+# rsms-inter-fonts clean Mac-like interface font, used by the design phase
+dnf5 install -y \
+    kde-connect \
+    android-tools \
+    rsms-inter-fonts
 
-# this installs a package from fedora repos
-dnf5 install -y tmux
+### 3. Name the system "Chaulagain OS"
+# ID stays "fedora" so Fedora's tools and repositories keep working.
+set_os_release() {
+    local key="$1" value="$2" file=/usr/lib/os-release
+    if grep -q "^${key}=" "$file"; then
+        sed -i "s|^${key}=.*|${key}=\"${value}\"|" "$file"
+    else
+        echo "${key}=\"${value}\"" >> "$file"
+    fi
+}
+set_os_release NAME "Chaulagain OS"
+set_os_release PRETTY_NAME "Chaulagain OS ${FEDORA_VERSION}"
+set_os_release VARIANT "Chaulagain OS"
+set_os_release VARIANT_ID "chaulagain-os"
+set_os_release DEFAULT_HOSTNAME "chaulagain-os"
+set_os_release HOME_URL "https://github.com/c-bibek/chaulagain-os"
+set_os_release DOCUMENTATION_URL "https://github.com/c-bibek/chaulagain-os#readme"
+set_os_release SUPPORT_URL "https://github.com/c-bibek/chaulagain-os/issues"
+set_os_release BUG_REPORT_URL "https://github.com/c-bibek/chaulagain-os/issues"
 
-# Use a COPR Example:
-#
-# dnf5 -y copr enable ublue-os/staging
-# dnf5 -y install package
-# Disable COPRs so they don't end up enabled on the final image:
-# dnf5 -y copr disable ublue-os/staging
+### 4. Mac-style desktop defaults
+# KDE reads system-wide defaults from /etc/xdg. Fedora also keeps defaults in
+# its kde-settings profile, so we write to both to make sure ours win.
+command -v kwriteconfig6 >/dev/null || dnf5 install -y /usr/bin/kwriteconfig6
+KDE_DEFAULT_DIRS=(/etc/xdg)
+if [[ -d /usr/share/kde-settings/kde-profile/default/xdg ]]; then
+    KDE_DEFAULT_DIRS+=(/usr/share/kde-settings/kde-profile/default/xdg)
+fi
+kde_default() { # file group key value
+    local dir
+    for dir in "${KDE_DEFAULT_DIRS[@]}"; do
+        kwriteconfig6 --file "${dir}/$1" --group "$2" --key "$3" "$4"
+    done
+}
 
-#### Example for enabling a System Unit File
+# Our desktop layout (menu bar on top, dock at the bottom) for new users.
+# It lives in /usr/share/plasma/look-and-feel/org.chaulagain.desktop
+kde_default kdeglobals KDE LookAndFeelPackage org.chaulagain.desktop
 
-systemctl enable podman.socket
+# Window buttons on the left like a Mac: close, minimize, zoom
+kde_default kwinrc org.kde.kdecoration2 ButtonsOnLeft XIA
+kde_default kwinrc org.kde.kdecoration2 ButtonsOnRight ""
+
+### 5. Updates
+# Automatic background updates (system + apps) and Flathub come from the
+# base image: rpm-ostreed-automatic.timer stages each new Chaulagain OS
+# version, and it is applied on the next restart.
