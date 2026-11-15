@@ -2,7 +2,7 @@
 
 ## Working with the owner
 - The owner relies on Claude for all of the engineering. Explain things in plain language, recommend one option instead of listing many, and say clearly what the owner must do themselves (installing things on Windows, clicking in a VM, judging the look).
-- Every change goes on a branch, then a pull request (the PR build checks it), then a merge into `main` (which publishes it). Never push straight to `main`.
+- Every change goes on a branch, then a pull request (the PR build checks it), then a merge into `main` (which publishes it). `main` is protected, admins included: it needs a pull request and a passing `Build and push image` check, so pull requests must always run that build.
 
 ## Goals
 1. A macOS-inspired look and feel. It must be *inspired by* macOS, never copied: no Apple logo, no Apple names (macOS, Finder, …), no Apple wallpapers, no SF fonts.
@@ -13,7 +13,9 @@
 - **Base:** `ghcr.io/ublue-os/kinoite-main:45`, which is Fedora KDE atomic plus codecs and Flathub. The base image already turns on staged automatic updates (`rpm-ostreed-automatic.timer`) and Flatpak update timers.
 - **Desktop:** KDE Plasma, because KDE Connect is built into it.
 - **Hosting:** the public GitHub repo `c-bibek/chaulagain-os`, with the image at `ghcr.io/c-bibek/chaulagain-os:latest`. The image is rebuilt daily and on every push to `main`.
-- **Signing:** `SIGNING_SECRET` holds a P-256 PEM private key made with OpenSSL. CI converts it with `cosign import-key-pair`, then signs. The public key is in `cosign.pub` and is also shipped at `/etc/pki/containers/chaulagain-os.pub`. Installed systems do **not** enforce signatures yet. That's planned as an OTA change, to be tested in the VM first (rolling back is safe because the previous deployment has no enforcement).
+- **Hosting stays on the personal account `c-bibek`** (the owner chose this). Installed computers follow `ghcr.io/c-bibek/chaulagain-os`, so the account must never be renamed.
+- **Encryption:** off by default (the owner chose this).
+- **Signing:** `SIGNING_SECRET` holds a P-256 PEM private key made with OpenSSL. The owner keeps a backup in their password manager; never print or commit it. CI converts it with `cosign import-key-pair`, then signs. The public key is in `cosign.pub` and is also shipped at `/etc/pki/containers/chaulagain-os.pub`. Installed systems do **not** enforce signatures yet. That's planned as an OTA change, to be tested in the VM first (rolling back is safe because the previous deployment has no enforcement).
 - **Installer:** an Anaconda ISO built on demand by `build-disk.yml`. Its kickstart runs `bootc switch` to our image.
 
 ## Desktop defaults: important

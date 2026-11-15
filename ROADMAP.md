@@ -25,8 +25,11 @@ A computer that feels like a Mac, works with a Pixel phone the way a Mac works w
 | Base | Fedora KDE Plasma, image-based (`ghcr.io/ublue-os/kinoite-main:45`) | Whole-system updates with rollback; codecs and Flathub included |
 | Desktop | KDE Plasma | Most customisable; KDE Connect, the phone link, is part of KDE |
 | Hosting | Public GitHub repo; image at `ghcr.io/c-bibek/chaulagain-os` | Free building and hosting; the recipe has no personal data |
+| Project home | The personal GitHub account `c-bibek`, not an organization | Owner's choice. Installed computers follow this address, so the GitHub username must never be renamed. |
 | Updates | Automatic background download, applied on restart | Like macOS Software Update |
-| Signing | Every image signed in CI (`cosign.pub`) | Proves updates come from us. Installed systems checking signatures is still to do. |
+| Signing | Every image signed in CI (`cosign.pub`); the owner keeps a backup of the private key in their password manager | Proves updates come from us. Installed systems checking signatures is still to do. |
+| Disk encryption | Off by default, as in Fedora | Owner's choice. It can still be turned on for a single computer in the installer. |
+| `main` branch | Protected: changes only through pull requests with a passing build | Nothing reaches installed computers by accident |
 | Testing | Hyper-V VM on a second Windows laptop, then an external SSD on real hardware | Windows stays untouched |
 | Phone features | Built into the OS, not shipped through the store | Native, like a Mac |
 | Not chosen: Omarchy | A great keyboard-driven setup, but the opposite of Mac-like | We borrow its ideas instead (see the design phase) |
@@ -227,11 +230,22 @@ An app store has three parts:
 - [ ] Merge, publish, build the installer, install in the VM
 - [ ] Prove OTA: push a small visible change and see it arrive after a restart
 
-### Phase 1: Decisions before the first install
-These are set when the disk is formatted, so they come first.
+### Phase 1: Before the first real install
+These are set when the disk is formatted, or are built into every installed computer, so they come first.
+- [x] Full-disk encryption: off by default
+- [x] The project stays on the personal account `c-bibek` (never rename it)
+- [x] A new signing key, with a backup in the owner's password manager
+- [x] `main` protected: pull requests with a passing build only
 - [ ] The installer uses the Btrfs disk format (needed for snapshots)
-- [ ] Full-disk encryption: on or off by default
+- [ ] Update channels: `stable` for real computers, `testing` for the VM
+- [ ] An "escape hatch": a setting shipped inside the OS that can move every computer to a new update address through an update
 - [ ] Default apps, including a browser, installed automatically
+
+**Safety checks before installing on real hardware**
+- [ ] Two-factor sign-in is on for the GitHub account (it controls every installed computer)
+- [ ] For dual boot: Windows BitLocker recovery key saved, files backed up, Windows Fast Startup turned off
+- [ ] A drive with enough space for Chaulagain OS (an external SSD keeps Windows untouched)
+- [ ] If a laptop belongs to an employer, their rules allow it
 
 ### Phase 2: Backups (the Time Machine equivalent)
 - [ ] Hourly local snapshots of home folders
@@ -281,7 +295,7 @@ These are set when the disk is formatted, so they come first.
 
 - [ ] **NAS:** is there one, and which brand? (Decides how backups connect.)
 - [ ] **Pixel model:** decides webcam mode and a few features
-- [ ] **Encryption:** on by default? (Means a password at every start, like FileVault.)
+- [x] **Encryption:** off by default (decided)
 - [ ] **Default apps:** which browser, office suite, photos and notes apps
 - [ ] **Mac keyboard shortcuts:** use the Windows key as Cmd, or keep Ctrl?
 - [ ] **Store:** free apps only, or leave room for paid apps later?

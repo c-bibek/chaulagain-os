@@ -1,15 +1,13 @@
 ---
 name: Build container image
-# Changes that only touch documentation or the Windows helper scripts don't
-# rebuild the OS, so installed computers don't download an identical update.
+# Pull requests always run the build: it's the required check that protects
+# main, so it must report on every pull request. Merges that only touch
+# documentation or the Windows helper scripts don't publish a new image, so
+# installed computers don't download an identical update.
 on:
   pull_request:
     branches:
       - main
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - 'tools/**'
   schedule:
     - cron: '05 10 * * *'  # 10:05am UTC everyday
   push:
