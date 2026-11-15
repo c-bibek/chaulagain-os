@@ -22,7 +22,7 @@ If Hyper-V is already ticked, skip this step.
 ## Step 2: Download the installer and the setup script
 
 1. Open <https://github.com/c-bibek/chaulagain-os/actions/workflows/build-disk.yml>.
-2. Click the newest run with a green check mark. Scroll to **Artifacts** and download it. It's a large zip of several GB.
+2. Click the newest run with a green check mark that was built for the **testing** channel (the test VM follows testing). Scroll to **Artifacts** and download `chaulagain-os-testing-installer`. It's a large zip of several GB.
 3. Unzip it. The installer is the `install.iso` file inside the `bootiso` folder.
 4. Download the setup script from <https://github.com/c-bibek/chaulagain-os/blob/main/tools/New-ChaulagainVM.ps1> with the **Download raw file** button (the down-arrow icon). Save it in **Downloads**.
 
@@ -51,7 +51,7 @@ In the VM window:
 
 1. Choose **Install Chaulagain OS** (it may say Fedora) and press Enter, or just wait.
 2. Pick your **language**.
-3. **Installation Destination:** select the VM's disk (there's only one) and keep **Automatic**.
+3. **Installation Destination:** select the VM's disk (there's only one) and keep **Automatic**. Automatic formats the disk as Btrfs, which Chaulagain OS needs for Time Machine-style snapshots.
 4. **User Creation:** enter your name and a password, and tick **Make this user administrator**.
 5. Click **Begin Installation** and wait about 10–20 minutes.
 6. Click **Reboot System**. The VM starts Chaulagain OS on its own. You don't need to remove the installer.
@@ -60,16 +60,23 @@ In the VM window:
 
 After logging in you should see a **menu bar across the top** and a **dock at the bottom**, with window buttons on the **left**.
 
-To confirm the VM is connected to the update channel, open **Konsole** (the terminal icon in the dock) and run:
+Then open **Konsole** (the terminal icon in the dock) and run these two checks:
 
 ```bash
 bootc status
 ```
 
-It should mention `ghcr.io/c-bibek/chaulagain-os:latest`.
+It should mention `ghcr.io/c-bibek/chaulagain-os:testing`, which means the VM follows the testing channel.
+
+```bash
+findmnt -n -o FSTYPE -T /var/home
+```
+
+It should print `btrfs`. If it prints anything else, tell Claude before going further: snapshots need Btrfs.
 
 ## How updates work
 
+- There are two channels. **Testing** (this VM) gets every change soon after it's merged, plus a daily rebuild with Fedora's fixes. **Stable** (real computers) gets the testing build once a week, or sooner when it's promoted by hand.
 - Chaulagain OS checks for updates in the background and downloads them.
 - Each update applies the **next time you restart**. Your files and apps stay.
 - To get an update right away (for example, when testing a change), run this in Konsole, then restart:

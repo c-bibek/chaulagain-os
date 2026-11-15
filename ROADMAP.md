@@ -26,7 +26,8 @@ A computer that feels like a Mac, works with a Pixel phone the way a Mac works w
 | Desktop | KDE Plasma | Most customisable; KDE Connect, the phone link, is part of KDE |
 | Hosting | Public GitHub repo; image at `ghcr.io/c-bibek/chaulagain-os` | Free building and hosting; the recipe has no personal data |
 | Project home | The personal GitHub account `c-bibek`, not an organization | Owner's choice. Installed computers follow this address, so the GitHub username must never be renamed. |
-| Updates | Automatic background download, applied on restart | Like macOS Software Update |
+| Updates | Two channels: **testing** (every merge plus daily rebuilds; the test VM) and **stable** (testing promoted weekly or by hand; real computers). Downloaded in the background, applied on restart | Like macOS Software Update, with a week of testing first |
+| Update address | Each image carries its own address (`/usr/share/chaulagain-os/update-source`); a timer moves the computer if it changes | The address is never truly permanent: an ordinary update can move every computer |
 | Signing | Every image signed in CI (`cosign.pub`); the owner keeps a backup of the private key in their password manager | Proves updates come from us. Installed systems checking signatures is still to do. |
 | Disk encryption | Off by default, as in Fedora | Owner's choice. It can still be turned on for a single computer in the installer. |
 | `main` branch | Protected: changes only through pull requests with a passing build | Nothing reaches installed computers by accident |
@@ -227,7 +228,7 @@ An app store has three parts:
 - [x] Automatic builds and signing on GitHub
 - [x] Installer (ISO) built on demand
 - [x] Hyper-V setup script and install guide
-- [ ] Merge, publish, build the installer, install in the VM
+- [ ] Merge, publish, promote the first build to stable, build the testing installer, install in the VM
 - [ ] Prove OTA: push a small visible change and see it arrive after a restart
 
 ### Phase 1: Before the first real install
@@ -236,9 +237,9 @@ These are set when the disk is formatted, or are built into every installed comp
 - [x] The project stays on the personal account `c-bibek` (never rename it)
 - [x] A new signing key, with a backup in the owner's password manager
 - [x] `main` protected: pull requests with a passing build only
-- [ ] The installer uses the Btrfs disk format (needed for snapshots)
-- [ ] Update channels: `stable` for real computers, `testing` for the VM
-- [ ] An "escape hatch": a setting shipped inside the OS that can move every computer to a new update address through an update
+- [x] The installer uses the Btrfs disk format: Fedora's "Automatic" default (the install guide checks it)
+- [x] Update channels: `stable` for real computers, `testing` for the VM
+- [x] An "escape hatch": a setting shipped inside the OS that can move every computer to a new update address through an update
 - [ ] Default apps, including a browser, installed automatically
 
 **Safety checks before installing on real hardware**

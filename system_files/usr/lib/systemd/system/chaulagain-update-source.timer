@@ -1,0 +1,10 @@
+[Unit]
+Description=Check the Chaulagain OS update address after startup and daily
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=1d
+RandomizedDelaySec=30min
+
+[Install]
+WantedBy=timers.target

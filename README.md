@@ -13,18 +13,21 @@ A macOS-inspired desktop operating system built on Fedora KDE Plasma. It's desig
 
 ## How updates work
 
-1. A change is merged into `main`.
-2. GitHub Actions builds a new image and publishes it to `ghcr.io/c-bibek/chaulagain-os:latest`, signed with the key in [`cosign.pub`](cosign.pub).
-3. Installed computers download it in the background and switch to it on the next restart.
-4. If an update misbehaves, pick the previous entry in the boot menu, or run `sudo bootc rollback`.
+1. A change is merged into `main` (only through a pull request with a passing build).
+2. GitHub Actions builds a new image, signs it with the key in [`cosign.pub`](cosign.pub), and publishes it to the **testing** channel: `ghcr.io/c-bibek/chaulagain-os:testing`.
+3. Once a week, or by hand at any time, the tested build is promoted to the **stable** channel, `ghcr.io/c-bibek/chaulagain-os:stable`. Real computers follow stable; the test VM follows testing.
+4. Installed computers download updates in the background and switch on the next restart.
+5. If an update misbehaves, pick the previous entry in the boot menu, or run `sudo bootc rollback`.
 
-The image is also rebuilt every day, so Fedora's security fixes arrive automatically.
+The image is also rebuilt every day, so Fedora's security fixes reach testing daily and stable weekly.
+
+Each image also carries its own update address (`/usr/share/chaulagain-os/update-source`). If the image ever moves, an ordinary update ships the new address and every computer follows it, with no manual steps.
 
 ## Installing
 
 - To test it in a Hyper-V virtual machine, follow [docs/install-hyperv.md](docs/install-hyperv.md).
-- The installer ISO is built on demand: **Actions → Build disk images → Run workflow**. Download it from that run's **Artifacts**.
-- If you already run Fedora Atomic or another bootc system: `sudo bootc switch ghcr.io/c-bibek/chaulagain-os:latest`
+- The installer ISO is built on demand: **Actions → Build disk images → Run workflow**, choosing the channel (testing or stable). Download it from that run's **Artifacts**.
+- If you already run Fedora Atomic or another bootc system: `sudo bootc switch ghcr.io/c-bibek/chaulagain-os:stable`
 
 ## Roadmap
 

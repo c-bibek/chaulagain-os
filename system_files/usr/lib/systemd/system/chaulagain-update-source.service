@@ -1,0 +1,10 @@
+[Unit]
+Description=Keep Chaulagain OS following its update address
+Documentation=https://github.com/c-bibek/chaulagain-os
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=/usr/share/chaulagain-os/update-source
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/chaulagain-update-source

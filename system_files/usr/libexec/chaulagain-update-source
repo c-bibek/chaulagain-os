@@ -1,0 +1,79 @@
+#!/usr/bin/bash
+# Chaulagain OS: the update-address "escape hatch".
+#
+# Every Chaulagain OS image carries the address it should be updated from in
+# /usr/share/chaulagain-os/update-source (for example ghcr.io/c-bibek/chaulagain-os).
+# If we ever move the image, an ordinary update ships the new address, and this
+# script moves the computer over to it, keeping its channel (stable or testing).
+# The switch is staged like any update and applies on the next restart.
+#
+# /etc/chaulagain-os/update-source, if present, overrides the address for one
+# computer. Set CHAULAGAIN_DRY_RUN=1 to only print what would happen.
+
+set -euo pipefail
+
+log() { echo "chaulagain-update-source: $*"; }
+
+source_file=/usr/share/chaulagain-os/update-source
+if [[ -f /etc/chaulagain-os/update-source ]]; then
+    source_file=/etc/chaulagain-os/update-source
+fi
+
+wanted="$(tr -d '[:space:]' < "${source_file}" 2>/dev/null || true)"
+# Accept only "registry/path" with no tag or digest, so a bad file can't do harm.
+if [[ ! "${wanted}" =~ ^[a-z0-9.-]+(:[0-9]+)?/[a-z0-9._/-]+$ ]]; then
+    log "no valid update address in ${source_file}; nothing to do"
+    exit 0
+fi
+
+# The image this computer currently follows.
+if [[ -n "${CHAULAGAIN_CURRENT_IMAGE:-}" ]]; then
+    current="${CHAULAGAIN_CURRENT_IMAGE}"
+    transport="registry"
+else
+    if ! status="$(bootc status --format=json 2>/dev/null)"; then
+        log "couldn't read bootc status; will try again later"
+        exit 0
+    fi
+    current="$(jq -r '.spec.image.image // empty' <<<"${status}")"
+    transport="$(jq -r '.spec.image.transport // "registry"' <<<"${status}")"
+fi
+
+if [[ -z "${current}" ]]; then
+    log "this computer isn't following an image; nothing to do"
+    exit 0
+fi
+if [[ "${current}" == *@* ]]; then
+    log "pinned to an exact build (${current}); leaving it alone"
+    exit 0
+fi
+
+# Split "registry/path:tag". A colon that belongs to a registry port is not a tag.
+repo="${current%:*}"
+tag="${current##*:}"
+if [[ "${repo}" == "${current}" || "${tag}" == */* ]]; then
+    repo="${current}"
+    tag="stable"
+fi
+
+if [[ "${repo}" == "${wanted}" ]]; then
+    log "already following ${repo}:${tag}"
+    exit 0
+fi
+
+target="${wanted}:${tag}"
+log "update address changed from ${repo} to ${wanted}; moving to ${target}"
+
+if [[ "${CHAULAGAIN_DRY_RUN:-0}" == "1" ]]; then
+    log "dry run: would run: bootc switch --transport ${transport} ${target}"
+    exit 0
+fi
+
+if bootc switch --transport "${transport}" "${target}"; then
+    log "done; the move applies on the next restart"
+elif rpm-ostree rebase "ostree-unverified-registry:${target}"; then
+    log "done with rpm-ostree; the move applies on the next restart"
+else
+    log "couldn't move to ${target}; will try again later"
+    exit 1
+fi

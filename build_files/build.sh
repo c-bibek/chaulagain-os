@@ -13,10 +13,12 @@ cp -avf /ctx/system_files/. /
 # kde-connect      phone link: files, photos, notifications, clipboard, texts
 # android-tools    adb, used for phone screen mirroring
 # rsms-inter-fonts clean Mac-like interface font, used by the design phase
+# jq               reads bootc's status for the update-address escape hatch
 dnf5 install -y \
     kde-connect \
     android-tools \
-    rsms-inter-fonts
+    rsms-inter-fonts \
+    jq
 
 ### 3. Name the system "Chaulagain OS"
 # ID stays "fedora" so Fedora's tools and repositories keep working.
@@ -65,3 +67,8 @@ kde_default kwinrc org.kde.kdecoration2 ButtonsOnRight ""
 # Automatic background updates (system + apps) and Flathub come from the
 # base image: rpm-ostreed-automatic.timer stages each new Chaulagain OS
 # version, and it is applied on the next restart.
+
+# Escape hatch: if the update address in /usr/share/chaulagain-os/update-source
+# ever changes, move the computer to it (same channel) through an update.
+chmod 0755 /usr/libexec/chaulagain-update-source
+systemctl enable chaulagain-update-source.timer

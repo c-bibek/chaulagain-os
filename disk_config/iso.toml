@@ -1,10 +1,17 @@
 # Chaulagain OS installer (Anaconda ISO)
-# After installing, point the system at our published image so it receives
-# over-the-air updates from GitHub.
+#
+# Update channel: after installing, the computer follows
+# ghcr.io/c-bibek/chaulagain-os:<channel> for over-the-air updates.
+# @CHANNEL@ is filled in by the "Build disk images" workflow (testing or
+# stable), so this file can't be used for a local build as it is.
+#
+# Disk format: keep "Automatic" storage configuration in the installer.
+# Fedora's installer then formats the disk as Btrfs, which the planned
+# Time Machine-style snapshots need. docs/install-hyperv.md shows how to check.
 [customizations.installer.kickstart]
 contents = """
 %post
-bootc switch --mutate-in-place --transport registry ghcr.io/c-bibek/chaulagain-os:latest
+bootc switch --mutate-in-place --transport registry ghcr.io/c-bibek/chaulagain-os:@CHANNEL@
 %end
 """
 
