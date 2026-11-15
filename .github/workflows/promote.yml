@@ -1,0 +1,58 @@
+---
+# Chaulagain OS update channels
+#
+#   testing  every merge into main, plus a daily rebuild with Fedora's fixes.
+#            The test VM follows this channel.
+#   stable   what real computers follow. This workflow copies the current
+#            testing build to stable: automatically once a week, so security
+#            fixes keep flowing after a week in testing, or by hand at any time
+#            (Actions -> Promote testing to stable -> Run workflow).
+#
+# The copy keeps the exact same image digest, so the signature made for the
+# testing build is valid for stable too.
+name: Promote testing to stable
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 10 * * 1'  # Mondays, 10:30 UTC
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: Promote testing to stable
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Copy the testing image to stable
+        env:
+          IMAGE: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          IMAGE="${IMAGE,,}"
+          command -v skopeo >/dev/null || { sudo apt-get update && sudo apt-get install -y skopeo; }
+
+          printf '%s' "${REGISTRY_TOKEN}" | skopeo login ghcr.io --username "${REGISTRY_USER}" --password-stdin
+
+          DIGEST="$(skopeo inspect --format '{{.Digest}}' "docker://${IMAGE}:testing")"
+          CURRENT="$(skopeo inspect --format '{{.Digest}}' "docker://${IMAGE}:stable" 2>/dev/null || true)"
+          echo "testing: ${DIGEST}"
+          echo "stable:  ${CURRENT:-none yet}"
+
+          if [[ "${DIGEST}" == "${CURRENT}" ]]; then
+            echo "Stable is already this build. Nothing to do."
+            exit 0
+          fi
+
+          for tag in stable "stable-$(date -u +%Y%m%d)"; do
+            skopeo copy --all --preserve-digests "docker://${IMAGE}@${DIGEST}" "docker://${IMAGE}:${tag}"
+          done
+          echo "Promoted ${DIGEST} to stable."

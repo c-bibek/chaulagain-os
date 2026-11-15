@@ -1,5 +1,9 @@
 ---
 name: Build container image
+# Pull requests always run the build: it's the required check that protects
+# main, so it must report on every pull request. Merges that only touch
+# documentation or the Windows helper scripts don't publish a new image, so
+# installed computers don't download an identical update.
 on:
   pull_request:
     branches:
@@ -10,7 +14,9 @@ on:
     branches:
       - main
     paths-ignore:
-      - '**/README.md'
+      - '**.md'
+      - 'docs/**'
+      - 'tools/**'
   workflow_dispatch:
 
 env:
@@ -157,8 +163,16 @@ jobs:
           COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
           DIGEST: ${{ steps.push-image.outputs.digest }}
         run: |
+          # Chaulagain OS keeps its signing key as a standard PEM key (made with
+          # OpenSSL), so convert it to cosign's format on this throwaway runner.
+          umask 077
+          KEYDIR="$(mktemp -d)"
+          trap 'rm -rf "${KEYDIR}"' EXIT
+          printf '%s\n' "${COSIGN_PRIVATE_KEY}" > "${KEYDIR}/signing.pem"
+          COSIGN_PASSWORD="" cosign import-key-pair --key "${KEYDIR}/signing.pem" --output-key-prefix "${KEYDIR}/cosign"
+
           # https://github.com/containers/container-libs/issues/388
           # https://github.com/coreos/rpm-ostree/issues/5509
           # use old bundle format, so we can use newer cosign 3.X.X instead of 2.X.X
-          cosign sign -y --new-bundle-format=false --use-signing-config=false --key env://COSIGN_PRIVATE_KEY ${IMAGE_REGISTRY}/${IMAGE_NAME}@${DIGEST}
+          COSIGN_PASSWORD="" cosign sign -y --new-bundle-format=false --use-signing-config=false --key "${KEYDIR}/cosign.key" ${IMAGE_REGISTRY}/${IMAGE_NAME}@${DIGEST}
 
