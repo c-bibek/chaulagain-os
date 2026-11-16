@@ -228,7 +228,9 @@ An app store has three parts:
 - [x] Automatic builds and signing on GitHub
 - [x] Installer (ISO) built on demand
 - [x] Hyper-V setup script and install guide
-- [ ] Merge, publish, promote the first build to stable, build the testing installer, install in the VM
+- [x] Merge, publish and sign the first build, and promote it to stable
+- [ ] Our own installer: bootc-image-builder can't find Fedora 45's packages when building the ISO. Fix it, or move to osbuild's image-builder or Universal Blue's ISO tooling. Until then, installs use Fedora Kinoite and then switch to Chaulagain OS.
+- [ ] Install in the VM (Fedora Kinoite, then switch to Chaulagain OS)
 - [ ] Prove OTA: push a small visible change and see it arrive after a restart
 
 ### Phase 1: Before the first real install
