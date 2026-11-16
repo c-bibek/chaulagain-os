@@ -12,7 +12,10 @@
 # to check after installing.
 [customizations.installer.kickstart]
 contents = """
-%post
+%post --erroronfail
+# Runs after the builder's own %post (it %includes ours after its base file),
+# so this is the update address the installed computer keeps. If it fails,
+# stop the install instead of leaving a computer that can't update.
 bootc switch --mutate-in-place --transport registry ghcr.io/c-bibek/chaulagain-os:@CHANNEL@
 %end
 """
