@@ -26,7 +26,7 @@ Each image also carries its own update address (`/usr/share/chaulagain-os/update
 ## Installing
 
 - To test it in a Hyper-V virtual machine, follow [docs/install-hyperv.md](docs/install-hyperv.md).
-- The installer ISO is built on demand: **Actions → Build disk images → Run workflow**, choosing the channel (testing or stable). Download it from that run's **Artifacts**.
+- Our own installer ISO (**Actions → Build disk images**) doesn't build for Fedora 45 yet. Until it does, install [Fedora Kinoite](https://fedoraproject.org/atomic-desktops/kinoite/download) and switch it to Chaulagain OS: `sudo rpm-ostree rebase ostree-unverified-registry:ghcr.io/c-bibek/chaulagain-os:stable`, restart, then run `plasma-apply-lookandfeel --apply org.chaulagain.desktop --resetLayout` for the Chaulagain OS layout.
 - If you already run Fedora Atomic or another bootc system: `sudo bootc switch ghcr.io/c-bibek/chaulagain-os:stable`
 
 ## Roadmap

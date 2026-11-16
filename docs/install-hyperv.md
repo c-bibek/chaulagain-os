@@ -21,19 +21,22 @@ If Hyper-V is already ticked, skip this step.
 
 ## Step 2: Download the installer and the setup script
 
-1. Open <https://github.com/c-bibek/chaulagain-os/actions/workflows/build-disk.yml>.
-2. Click the newest run with a green check mark that was built for the **testing** channel (the test VM follows testing). Scroll to **Artifacts** and download `chaulagain-os-testing-installer`. It's a large zip of several GB.
-3. Unzip it. The installer is the `install.iso` file inside the `bootiso` folder.
-4. Download the setup script from <https://github.com/c-bibek/chaulagain-os/blob/main/tools/New-ChaulagainVM.ps1> with the **Download raw file** button (the down-arrow icon). Save it in **Downloads**.
+Our own Chaulagain OS installer doesn't build yet (see the roadmap). For now, you install **Fedora Kinoite**, the official Fedora system that Chaulagain OS is built on, and switch it to Chaulagain OS with one command in Step 5. The result is the same system.
+
+1. Download the **Fedora Kinoite 45** installer from Fedora's official site: <https://fedoraproject.org/atomic-desktops/kinoite/download>. Pick the x86_64 ISO, a file named like `Fedora-Kinoite-Installer-45-….x86_64.iso` (a few GB), and save it in **Downloads**.
+2. Download the setup script from <https://github.com/c-bibek/chaulagain-os/blob/main/tools/New-ChaulagainVM.ps1> with the **Download raw file** button (the down-arrow icon). Save it in **Downloads**.
+
+Once our own installer works, you'll download `chaulagain-os-testing-installer` from **Actions → Build disk images** instead, and skip Step 5.
 
 ## Step 3: Create the virtual machine
 
 1. Press **Start**, type **PowerShell**, right-click **Windows PowerShell**, and choose **Run as administrator**.
-2. Paste this and press Enter. Change the path if your `install.iso` is somewhere else:
+2. Paste this and press Enter. It finds the Fedora Kinoite ISO in your Downloads folder:
 
    ```powershell
    cd $env:USERPROFILE\Downloads
-   powershell -ExecutionPolicy Bypass -File .\New-ChaulagainVM.ps1 -IsoPath "$env:USERPROFILE\Downloads\bootiso\install.iso"
+   $iso = (Get-ChildItem "$env:USERPROFILE\Downloads\Fedora-Kinoite-*.iso" | Select-Object -First 1).FullName
+   powershell -ExecutionPolicy Bypass -File .\New-ChaulagainVM.ps1 -IsoPath $iso
    ```
 
 The script:
@@ -49,16 +52,36 @@ The script:
 
 In the VM window:
 
-1. Choose **Install Chaulagain OS** (it may say Fedora) and press Enter, or just wait.
+1. Choose **Install Fedora Kinoite** and press Enter, or just wait.
 2. Pick your **language**.
-3. **Installation Destination:** select the VM's disk (there's only one) and keep **Automatic**. Automatic formats the disk as Btrfs, which Chaulagain OS needs for Time Machine-style snapshots.
-4. **User Creation:** enter your name and a password, and tick **Make this user administrator**.
-5. Click **Begin Installation** and wait about 10–20 minutes.
-6. Click **Reboot System**. The VM starts Chaulagain OS on its own. You don't need to remove the installer.
+3. **Disk:** select the VM's disk (there's only one) and let the installer use the **whole disk automatically**. That formats it as Btrfs, which Chaulagain OS needs for Time Machine-style snapshots. Leave encryption **off**.
+4. **Your account:** if the installer asks, enter your name and a password and make the user an **administrator**. If it doesn't ask, it will after the restart.
+5. Start the installation and wait about 10–20 minutes.
+6. Restart when it's done. The VM starts from its disk on its own; you don't need to remove the installer.
 
-## Step 5: First login: check it worked
+## Step 5: Switch to Chaulagain OS
 
-After logging in you should see a **menu bar across the top** and a **dock at the bottom**, with window buttons on the **left**.
+1. Log in, open **Konsole** (search for it in the app menu), and run this. It asks for your password and downloads Chaulagain OS, which takes about 5–15 minutes:
+
+   ```bash
+   sudo rpm-ostree rebase ostree-unverified-registry:ghcr.io/c-bibek/chaulagain-os:testing
+   ```
+
+2. Restart:
+
+   ```bash
+   systemctl reboot
+   ```
+
+3. Log in again, open Konsole, and apply the Chaulagain OS layout. Chaulagain OS only applies it automatically to brand-new users, and your user was created on Fedora Kinoite:
+
+   ```bash
+   plasma-apply-lookandfeel --apply org.chaulagain.desktop --resetLayout
+   ```
+
+## Step 6: Check it worked
+
+You should see a **menu bar across the top** and a **dock at the bottom**, with window buttons on the **left**.
 
 Then open **Konsole** (the terminal icon in the dock) and run these two checks:
 
