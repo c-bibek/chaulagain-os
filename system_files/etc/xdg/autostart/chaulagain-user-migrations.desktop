@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Chaulagain OS settings updates
+Comment=Brings your desktop settings forward after a Chaulagain OS update
+Exec=/usr/libexec/chaulagain-user-migrations --run
+NoDisplay=true
+OnlyShowIn=KDE;
+X-KDE-autostart-phase=2

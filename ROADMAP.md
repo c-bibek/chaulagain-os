@@ -27,6 +27,7 @@ A computer that feels like a Mac, works with a Pixel phone the way a Mac works w
 | Hosting | Public GitHub repo; image at `ghcr.io/c-bibek/chaulagain-os` | Free building and hosting; the recipe has no personal data |
 | Project home | The personal GitHub account `c-bibek`, not an organization | Owner's choice. Installed computers follow this address, so the GitHub username must never be renamed. |
 | Updates | Two channels: **testing** (every merge plus daily rebuilds; the test VM) and **stable** (testing promoted weekly or by hand; real computers). Downloaded in the background, applied on restart | Like macOS Software Update, with a week of testing first |
+| UI changes for existing users | System-wide defaults change for everyone who hasn't customised that setting; anything else ships as a numbered settings script that runs once per user after login | "Anything we change, it's done": installed computers get UI changes through OTA, not only new installs |
 | Update address | Each image carries its own address (`/usr/share/chaulagain-os/update-source`); a timer moves the computer if it changes | The address is never truly permanent: an ordinary update can move every computer |
 | Signing | Every image signed in CI (`cosign.pub`); the owner keeps a backup of the private key in their password manager | Proves updates come from us. Installed systems checking signatures is still to do. |
 | Disk encryption | Off by default, as in Fedora | Owner's choice. It can still be turned on for a single computer in the installer. |
@@ -229,8 +230,9 @@ An app store has three parts:
 - [x] Installer (ISO) built on demand
 - [x] Hyper-V setup script and install guide
 - [x] Merge, publish and sign the first build, and promote it to stable
-- [ ] Our own installer: bootc-image-builder can't find Fedora 45's packages when building the ISO. Fix it, or move to osbuild's image-builder or Universal Blue's ISO tooling. Until then, installs use Fedora Kinoite and then switch to Chaulagain OS.
-- [ ] Install in the VM (Fedora Kinoite, then switch to Chaulagain OS)
+- [x] Our own installer: works around Fedora 45's moved repository files (osbuild/image-builder#2704). Longer term, move to osbuild's image-builder ISO flow, since bootc-image-builder's anaconda-iso is deprecated.
+- [x] Settings updates for existing users: numbered scripts in `/usr/share/chaulagain-os/user-migrations/` run once per user after their next login, so UI changes reach people who already installed
+- [ ] Install in the VM from the Chaulagain OS installer, and confirm an OTA update arrives
 - [ ] Prove OTA: push a small visible change and see it arrive after a restart
 
 ### Phase 1: Before the first real install

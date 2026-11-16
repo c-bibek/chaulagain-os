@@ -21,12 +21,15 @@ A macOS-inspired desktop operating system built on Fedora KDE Plasma. It's desig
 
 The image is also rebuilt every day, so Fedora's security fixes reach testing daily and stable weekly.
 
+Changes to the look reach people who already installed, too: an update can ship numbered settings scripts (`/usr/share/chaulagain-os/user-migrations/`) that run once for each user after their next login. Brand-new users simply get the latest defaults.
+
 Each image also carries its own update address (`/usr/share/chaulagain-os/update-source`). If the image ever moves, an ordinary update ships the new address and every computer follows it, with no manual steps.
 
 ## Installing
 
 - To test it in a Hyper-V virtual machine, follow [docs/install-hyperv.md](docs/install-hyperv.md).
-- Our own installer ISO (**Actions → Build disk images**) doesn't build for Fedora 45 yet. Until it does, install [Fedora Kinoite](https://fedoraproject.org/atomic-desktops/kinoite/download) and switch it to Chaulagain OS: `sudo rpm-ostree rebase ostree-unverified-registry:ghcr.io/c-bibek/chaulagain-os:stable`, restart, then run `plasma-apply-lookandfeel --apply org.chaulagain.desktop --resetLayout` for the Chaulagain OS layout.
+- The installer ISO is built on demand: **Actions → Build disk images → Run workflow**, choosing the channel (testing or stable). Download it from that run's **Artifacts**. It installs Chaulagain OS ready to use, with nothing to type afterwards.
+- Backup route: install [Fedora Kinoite](https://fedoraproject.org/atomic-desktops/kinoite/download), run `sudo rpm-ostree rebase ostree-unverified-registry:ghcr.io/c-bibek/chaulagain-os:stable` and restart. The Chaulagain OS layout is applied automatically at the next login.
 - If you already run Fedora Atomic or another bootc system: `sudo bootc switch ghcr.io/c-bibek/chaulagain-os:stable`
 
 ## Roadmap

@@ -55,6 +55,11 @@ if [[ "${repo}" == "${current}" || "${tag}" == */* ]]; then
     repo="${current}"
     tag="stable"
 fi
+# Only move to a channel we publish (stable, testing, or a dated build of one);
+# anything else goes to stable.
+if [[ ! "${tag}" =~ ^(stable|testing)([-.][A-Za-z0-9._-]+)?$ ]]; then
+    tag="stable"
+fi
 
 if [[ "${repo}" == "${wanted}" ]]; then
     log "already following ${repo}:${tag}"

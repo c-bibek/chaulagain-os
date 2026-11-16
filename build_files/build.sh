@@ -72,3 +72,12 @@ kde_default kwinrc org.kde.kdecoration2 ButtonsOnRight ""
 # ever changes, move the computer to it (same channel) through an update.
 chmod 0755 /usr/libexec/chaulagain-update-source
 systemctl enable chaulagain-update-source.timer
+
+### 6. Settings updates for existing users
+# Updates replace the system, but each user's desktop settings live in their
+# home folder. Numbered scripts in /usr/share/chaulagain-os/user-migrations/
+# run once per user after their next login (brand-new users skip them, since
+# they already get the current defaults). Started by
+# /etc/xdg/plasma-workspace/env/chaulagain-user-migrations.sh (before the
+# desktop) and /etc/xdg/autostart/chaulagain-user-migrations.desktop (after).
+chmod 0755 /usr/libexec/chaulagain-user-migrations

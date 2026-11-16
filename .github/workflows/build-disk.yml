@@ -43,7 +43,10 @@ concurrency:
 jobs:
   build:
     name: Build disk images
-    runs-on: ${{ inputs.platform == 'amd64' && 'ubuntu-26.04' || 'ubuntu-26.04-arm' }}
+    # Ubuntu 24.04: on the 26.04 runners, osbuild inside bootc-image-builder
+    # can't mount (“mount: /run/osbuild/tree/dev: permission denied”), see
+    # https://github.com/ublue-os/image-template/issues/269
+    runs-on: ${{ inputs.platform == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     strategy:
       fail-fast: false
       matrix:
@@ -94,17 +97,47 @@ jobs:
           fi
           grep -n 'bootc switch' disk_config/iso.toml
 
+      # Workaround for https://github.com/osbuild/image-builder/issues/2704:
+      # Fedora 45 moved its repository files from /etc/yum.repos.d to
+      # /usr/share/dnf5/repos.d, but bootc-image-builder's anaconda-iso still
+      # reads only /etc/yum.repos.d, so it finds no Fedora packages. Build the
+      # installer from a copy of the image that also has them in /etc. The
+      # copies disappear from installed computers with their first update.
+      - name: Prepare the image for the installer builder
+        run: |
+          set -euo pipefail
+          SOURCE="${IMAGE_REGISTRY}/${IMAGE_NAME}:${DEFAULT_TAG}"
+          sudo podman pull "${SOURCE}"
+          printf '%s\n' \
+            "FROM ${SOURCE}" \
+            "RUN if [ -d /usr/share/dnf5/repos.d ]; then cp -n /usr/share/dnf5/repos.d/*.repo /etc/yum.repos.d/; fi" \
+            > "${RUNNER_TEMP}/Containerfile.installer"
+          sudo podman build --pull=never --tag localhost/chaulagain-os-installer-payload:latest \
+            --file "${RUNNER_TEMP}/Containerfile.installer" "${RUNNER_TEMP}"
+          echo "Repository files the installer builder will see:"
+          sudo podman run --rm localhost/chaulagain-os-installer-payload:latest ls /etc/yum.repos.d
+
       - name: Build disk images
         id: build
-        uses: osbuild/bootc-image-builder-action@8661cd3832544ad68c12dcde8681b13ab0f56a8d # main
-        with:
-          builder-image: ${{ env.BIB_IMAGE }}
-          config-file: ${{ matrix.disk-type == 'anaconda-iso' && './disk_config/iso.toml' || './disk_config/disk.toml' }}
-          image: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
-          chown: ${{ env.USER_UID }}:${{ env.USER_GID }}
-          types: ${{ matrix.disk-type }}
+        run: |
+          set -euo pipefail
+          CONFIG="./disk_config/${{ matrix.disk-type == 'anaconda-iso' && 'iso.toml' || 'disk.toml' }}"
+          mkdir -p ./output
           # Btrfs root, matching /usr/lib/bootc/install/00-chaulagain-os.toml in the image
-          additional-args: --use-librepo=True --rootfs btrfs
+          sudo podman run --rm --privileged \
+            --security-opt label=type:unconfined_t \
+            --volume /var/lib/containers/storage:/var/lib/containers/storage \
+            --volume ./output:/output \
+            --volume "${CONFIG}:/config.toml:ro" \
+            "${BIB_IMAGE}" build \
+              --output /output \
+              --chown "${USER_UID}:${USER_GID}" \
+              --use-librepo=True \
+              --rootfs btrfs \
+              --type "${{ matrix.disk-type }}" \
+              localhost/chaulagain-os-installer-payload:latest
+          echo "output-directory=$(pwd)/output" >> "${GITHUB_OUTPUT}"
+          find ./output -type f -exec ls -lh {} \;
 
       - name: Upload disk images and Checksum to Job Artifacts
         if: inputs.upload-to-s3 != true && github.event_name != 'pull_request'
