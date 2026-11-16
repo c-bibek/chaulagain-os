@@ -1,0 +1,4 @@
+# Chaulagain OS install defaults for bootc and bootc-image-builder.
+# Btrfs is required for the planned Time Machine-style snapshots.
+[install.filesystem.root]
+type = "btrfs"

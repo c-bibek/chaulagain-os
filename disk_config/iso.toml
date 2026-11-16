@@ -5,9 +5,11 @@
 # @CHANNEL@ is filled in by the "Build disk images" workflow (testing or
 # stable), so this file can't be used for a local build as it is.
 #
-# Disk format: keep "Automatic" storage configuration in the installer.
-# Fedora's installer then formats the disk as Btrfs, which the planned
-# Time Machine-style snapshots need. docs/install-hyperv.md shows how to check.
+# Disk format: Btrfs, which the planned Time Machine-style snapshots need.
+# The image declares it (/usr/lib/bootc/install/00-chaulagain-os.toml), the
+# workflow passes --rootfs btrfs, and Fedora's installer uses Btrfs when you
+# keep "Automatic" storage configuration. docs/install-hyperv.md shows how
+# to check after installing.
 [customizations.installer.kickstart]
 contents = """
 %post
