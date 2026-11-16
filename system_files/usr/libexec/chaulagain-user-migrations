@@ -1,0 +1,70 @@
+#!/usr/bin/bash
+# Chaulagain OS: bring each user's own settings forward when the OS updates.
+#
+# Over-the-air updates replace the whole system, but personal settings (the
+# menu bar, dock and other desktop choices) live in each user's home folder.
+# Changes to those ship as numbered scripts in
+# /usr/share/chaulagain-os/user-migrations/ (for example 0002-new-dock.sh).
+# Each one runs once per user, in order, after that user's next login.
+#
+# Brand-new users already get the current defaults at their first login, so
+# every existing script is marked as done for them instead of being run.
+#
+#   --prepare  runs before the desktop starts (Plasma's env scripts) and
+#              tells new users apart from existing ones
+#   --run      runs after the desktop starts (autostart) and runs pending scripts
+
+set -uo pipefail
+
+MIGRATIONS_DIR="${CHAULAGAIN_MIGRATIONS_DIR:-/usr/share/chaulagain-os/user-migrations}"
+STATE_DIR="${XDG_STATE_HOME:-${HOME}/.local/state}/chaulagain-os"
+DONE_FILE="${STATE_DIR}/user-migrations-done"
+PLASMA_LAYOUT="${XDG_CONFIG_HOME:-${HOME}/.config}/plasma-org.kde.plasma.desktop-appletsrc"
+
+log() { echo "chaulagain-user-migrations: $*"; }
+
+list_migrations() {
+    find "${MIGRATIONS_DIR}" -maxdepth 1 -type f -name '[0-9][0-9][0-9][0-9]-*.sh' -printf '%f\n' 2>/dev/null | sort
+}
+
+prepare() {
+    [[ -f "${DONE_FILE}" ]] && return 0
+    mkdir -p "${STATE_DIR}" || return 1
+    if [[ -f "${PLASMA_LAYOUT}" ]]; then
+        # This user already had a desktop before (for example, switched from
+        # Fedora Kinoite): run every script.
+        : > "${DONE_FILE}"
+        log "existing user: all settings updates will run"
+    else
+        # Brand-new user: the first login already applies today's defaults.
+        list_migrations > "${DONE_FILE}"
+        log "new user: current defaults apply, nothing to run"
+    fi
+}
+
+run() {
+    prepare || return 0
+    if command -v flock >/dev/null 2>&1; then
+        exec 9>"${STATE_DIR}/.lock"
+        flock -n 9 || { log "already running"; return 0; }
+    fi
+    local name
+    while IFS= read -r name; do
+        [[ -n "${name}" ]] || continue
+        grep -qxF -- "${name}" "${DONE_FILE}" && continue
+        log "running ${name}"
+        if bash "${MIGRATIONS_DIR}/${name}"; then
+            echo "${name}" >> "${DONE_FILE}"
+        else
+            log "${name} failed; it will be tried again after the next login"
+            break
+        fi
+    done < <(list_migrations)
+}
+
+case "${1:-}" in
+    --prepare) prepare ;;
+    --run) run ;;
+    *) echo "usage: $0 --prepare | --run" >&2; exit 2 ;;
+esac
+exit 0
